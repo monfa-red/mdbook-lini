@@ -14,9 +14,9 @@ blocks to inline SVG at build time.
 
 ````markdown
 ```lini
-|chart| "p99 latency, by release" { categories: "v1.6", "v1.7", "v1.8", "v1.9" } [
-  |axis| "ms" { side: left; range: 0 320 }
-  |area| "p99" { data: 240, 180, 120, 96; curve: smooth }
+|chart| "Signups by channel" { categories: "Jan", "Feb", "Mar", "Apr", "May", "Jun" } [
+  |line| "organic"  { data: 14, 19, 26, 33, 44, 58; curve: smooth; marker: dot; stroke: --teal }
+  |line| "referral" { data: 9, 13, 15, 22, 27, 36; curve: smooth; marker: dot; stroke: --purple }
 ]
 ```
 ````
@@ -102,7 +102,7 @@ To hand Lini your own palette, alias its role variables. Everything shipped sits
     --lini-bg: transparent;
     --lini-fg: var(--fg);
     --lini-accent: #4a7fd4;
-    --lini-font-family: var(--mono-font);
+    --lini-font-family: var(--body-font);
 }
 ```
 
@@ -110,9 +110,9 @@ Its eleven-hue palette (`--rose`, `--sky`, `--teal`, … each in five tiers) is 
 where a figure references it.
 
 > [!NOTE]
-> Set `--lini-font-family` only to a font metrically identical to the one Lini measured
-> against at compile time. Lini bakes text positions at build time, so a font with
-> different metrics will drift.
+> Alias `--lini-font-family` only to a proportional sans close in metrics to the one Lini
+> measured against at compile time. Lini bakes each label's position and sizes its box to
+> fit, so a wider face — a monospace one especially — pushes the text past its border.
 
 ## Sizing
 
