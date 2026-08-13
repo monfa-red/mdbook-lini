@@ -7,7 +7,7 @@
 //!
 //! It goes in `@layer mdbook-lini`, so any unlayered rule in the book's own CSS
 //! wins without `!important`. Books that would rather own the styling outright
-//! set `inline-css = false` and link `mdbook-lini.css` themselves.
+//! set `bundled-css = false` and link `mdbook-lini.css` themselves.
 
 use std::sync::OnceLock;
 

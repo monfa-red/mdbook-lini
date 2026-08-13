@@ -36,9 +36,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let context = payload.pop().ok_or("preprocessor input missing context")?;
 
     let src_root = src_root(&context);
-    let inline_css = inline_css(&context);
+    let bundled_css = bundled_css(&context);
     if let Some(sections) = sections_mut(&mut book) {
-        render(sections, &src_root, inline_css);
+        render(sections, &src_root, bundled_css);
     }
 
     let mut out = BufWriter::new(std::io::stdout().lock());
@@ -61,14 +61,16 @@ fn src_root(context: &Value) -> PathBuf {
     Path::new(root).join(src)
 }
 
-/// Whether to ship the stylesheet with the figures — `inline-css` in
-/// `[preprocessor.lini]`, on unless the book turns it off.
-fn inline_css(context: &Value) -> bool {
-    context["config"]["preprocessor"]["lini"]["inline-css"].as_bool().unwrap_or(true)
+/// Whether to ship our own stylesheet with the figures — `bundled-css` in
+/// `[preprocessor.lini]`, on unless the book turns it off. This governs the
+/// figure wrapper and the theme binding only; the styling *inside* each SVG is
+/// Lini's, and travels with it either way.
+fn bundled_css(context: &Value) -> bool {
+    context["config"]["preprocessor"]["lini"]["bundled-css"].as_bool().unwrap_or(true)
 }
 
 /// Recursively rewrite every chapter's lini blocks.
-fn render(items: &mut [Value], src_root: &Path, inline_css: bool) {
+fn render(items: &mut [Value], src_root: &Path, bundled_css: bool) {
     for item in items {
         let Some(chapter) = item.get_mut("Chapter").and_then(Value::as_object_mut) else {
             continue;
@@ -85,13 +87,13 @@ fn render(items: &mut [Value], src_root: &Path, inline_css: bool) {
                 figure::render(source, &source_path, line, base_dir.as_deref())
             });
             // Only a chapter that drew something needs the stylesheet.
-            if inline_css && figures > 0 {
+            if bundled_css && figures > 0 {
                 rendered.insert_str(0, css::style_tag());
             }
             chapter.insert("content".into(), Value::String(rendered));
         }
         if let Some(sub) = chapter.get_mut("sub_items").and_then(Value::as_array_mut) {
-            render(sub, src_root, inline_css);
+            render(sub, src_root, bundled_css);
         }
     }
 }

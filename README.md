@@ -37,6 +37,12 @@ language. So one fence covers all of them, and there is nothing else to install.
 cargo install mdbook-lini
 ```
 
+Or track the repository:
+
+```bash
+cargo install --git https://github.com/monfa-red/mdbook-lini
+```
+
 ## Setup
 
 One line in `book.toml`. mdbook finds the `mdbook-lini` binary from the key, and the
@@ -118,13 +124,17 @@ wrapper scrolls horizontally instead.
 
 ## Owning the styling
 
-The shipped CSS rides along in a `<style>` block on each chapter that has a figure — about
-900 bytes, and none on chapters without one. To take it over instead, turn it off and link
-[`mdbook-lini.css`](mdbook-lini.css) yourself:
+mdbook-lini's own stylesheet — the wrapper above, the theme binding, and the error box —
+rides along in a `<style>` block on each chapter that has a figure. About 900 bytes, and
+none on chapters without one. It is not Lini's styling: that lives inside each SVG and
+travels with it regardless.
+
+To take it over instead, turn it off and link [`mdbook-lini.css`](mdbook-lini.css)
+yourself:
 
 ```toml
 [preprocessor.lini]
-inline-css = false
+bundled-css = false
 
 [output.html]
 additional-css = ["mdbook-lini.css"]
