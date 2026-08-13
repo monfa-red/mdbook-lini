@@ -14,13 +14,17 @@ blocks to inline SVG at build time.
 
 ````markdown
 ```lini
-cat -> dog -> bird
+|chart| "p99 latency, by release" { categories: "v1.6", "v1.7", "v1.8", "v1.9" } [
+  |axis| "ms" { side: left; range: 0 320 }
+  |area| "p99" { data: 240, 180, 120, 96; curve: smooth }
+]
 ```
 ````
 
-[Lini](https://lini.rs) is one engine for every figure family — flowcharts, charts,
-sequences, mindmaps, trees, schematics, and technical drawings are all layouts of the same
-language. So one fence covers all of them, and there is nothing else to install.
+That is a chart, but the fence is not a chart fence. [Lini](https://lini.rs) is one engine
+for every figure family — flowcharts, charts, sequences, mindmaps, trees, schematics, and
+technical drawings are all layouts of the same language. So one fence covers all of them,
+and there is nothing else to install.
 
 - **No runtime.** Figures are SVG in the HTML. No JavaScript, no CDN, no browser at build
   time — the pages work with scripts off.
