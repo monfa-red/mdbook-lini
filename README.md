@@ -151,8 +151,11 @@ mdbook-lini: figures.md:41:1: warning: impossible (a -> b): no legal route
 
 ## Links
 
+Everything about the language itself lives with Lini, not here:
+
 - [lini.rs](https://lini.rs) — language reference and gallery
-- [github.com/monfa-red/lini](https://github.com/monfa-red/lini) — the Lini compiler
+- [github.com/monfa-red/lini](https://github.com/monfa-red/lini) — the compiler, its `SPEC.md`,
+  and `samples/` for every figure family
 
 ## License
 
