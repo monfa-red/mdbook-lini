@@ -37,12 +37,6 @@ language. So one fence covers all of them, and there is nothing else to install.
 cargo install mdbook-lini
 ```
 
-Or track the repository:
-
-```bash
-cargo install --git https://github.com/monfa-red/mdbook-lini
-```
-
 ## Setup
 
 One line in `book.toml`. mdbook finds the `mdbook-lini` binary from the key, and the
