@@ -7,8 +7,10 @@
 //!
 //! Each block is replaced with a `<div class="lini-figure">` wrapping the SVG.
 //! Colours stay live `var(--lini-*)` references, so a figure follows the book's
-//! light/dark toggle through CSS alone — see `mdbook-lini.css`.
+//! light/dark toggle through CSS alone — see `mdbook-lini.css`, which rides
+//! along in a `<style>` block rather than asking the book to link it.
 
+mod css;
 mod fence;
 mod figure;
 
@@ -34,8 +36,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let context = payload.pop().ok_or("preprocessor input missing context")?;
 
     let src_root = src_root(&context);
+    let inline_css = inline_css(&context);
     if let Some(sections) = sections_mut(&mut book) {
-        render(sections, &src_root);
+        render(sections, &src_root, inline_css);
     }
 
     let mut out = BufWriter::new(std::io::stdout().lock());
@@ -58,8 +61,14 @@ fn src_root(context: &Value) -> PathBuf {
     Path::new(root).join(src)
 }
 
+/// Whether to ship the stylesheet with the figures — `inline-css` in
+/// `[preprocessor.lini]`, on unless the book turns it off.
+fn inline_css(context: &Value) -> bool {
+    context["config"]["preprocessor"]["lini"]["inline-css"].as_bool().unwrap_or(true)
+}
+
 /// Recursively rewrite every chapter's lini blocks.
-fn render(items: &mut [Value], src_root: &Path) {
+fn render(items: &mut [Value], src_root: &Path, inline_css: bool) {
     for item in items {
         let Some(chapter) = item.get_mut("Chapter").and_then(Value::as_object_mut) else {
             continue;
@@ -70,13 +79,19 @@ fn render(items: &mut [Value], src_root: &Path) {
         let base_dir = src_root.join(&source_path).parent().map(Path::to_path_buf);
 
         if let Some(content) = chapter.get("content").and_then(Value::as_str) {
-            let rendered = fence::rewrite(content, |source, line| {
+            let mut figures = 0;
+            let mut rendered = fence::rewrite(content, |source, line| {
+                figures += 1;
                 figure::render(source, &source_path, line, base_dir.as_deref())
             });
+            // Only a chapter that drew something needs the stylesheet.
+            if inline_css && figures > 0 {
+                rendered.insert_str(0, css::style_tag());
+            }
             chapter.insert("content".into(), Value::String(rendered));
         }
         if let Some(sub) = chapter.get_mut("sub_items").and_then(Value::as_array_mut) {
-            render(sub, src_root);
+            render(sub, src_root, inline_css);
         }
     }
 }

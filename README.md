@@ -24,8 +24,8 @@ language. So one fence covers all of them, and there is nothing else to install.
 
 - **No runtime.** Figures are SVG in the HTML. No JavaScript, no CDN, no browser at build
   time — the pages work with scripts off.
-- **No second binary.** Lini is linked as a library. `cargo install mdbook-lini` is the
-  whole toolchain.
+- **No second binary, no setup.** Lini is linked as a library, and the styling ships with
+  the figures. `cargo install mdbook-lini` plus one line of config is the whole thing.
 - **Dark mode for free.** Colours are live CSS variables, so figures follow your theme
   toggle without a re-render.
 - **Fast and deterministic.** A typical diagram compiles in ~2 ms, byte-identically each
@@ -39,22 +39,14 @@ cargo install mdbook-lini
 
 ## Setup
 
-Add the preprocessor to `book.toml`. mdbook finds the `mdbook-lini` binary from the key,
-so there is nothing else to point at:
+One line in `book.toml`. mdbook finds the `mdbook-lini` binary from the key, and the
+styling ships with the figures:
 
 ```toml
 [preprocessor.lini]
 ```
 
-Then copy [`mdbook-lini.css`](mdbook-lini.css) next to your `book.toml` and register it:
-
-```toml
-[output.html]
-additional-css = ["mdbook-lini.css"]
-```
-
-That stylesheet is what sizes a figure and binds it to your theme. Without it the SVGs
-still render, but they will not resize with the column or follow the light/dark toggle.
+That's it — no `additional-css`, no files to copy.
 
 ## Writing a figure
 
@@ -90,11 +82,16 @@ inside a wider fence — so you can document Lini in a Lini-powered book.
 ## Theming
 
 Each figure is a `<div class="lini-figure">` wrapping the SVG. Lini emits every colour as
-a `light-dark()` pair keyed on `color-scheme`, and the stylesheet binds that to mdbook's
-themes — which is the entire light/dark integration.
+a `light-dark()` pair keyed on `color-scheme`, and the shipped styling binds that to
+mdbook's five built-in themes — which is the entire light/dark integration. A custom theme
+adds its own class:
 
-To hand Lini your own palette, alias its role variables. Lini's defaults sit in
-`@layer lini.defaults`, so any unlayered rule wins without `!important`:
+```css
+html.my-dark-theme .lini { color-scheme: dark; }
+```
+
+To hand Lini your own palette, alias its role variables. Everything shipped sits in
+`@layer`, so any unlayered rule of yours wins without `!important`:
 
 ```css
 .lini {
@@ -118,6 +115,20 @@ where a figure references it.
 The wrapper carries `--lini-w`, the diagram's natural width. A figure scales down to fit
 the column but stops at 75% of that width — past there the labels stop reading, so the
 wrapper scrolls horizontally instead.
+
+## Owning the styling
+
+The shipped CSS rides along in a `<style>` block on each chapter that has a figure — about
+900 bytes, and none on chapters without one. To take it over instead, turn it off and link
+[`mdbook-lini.css`](mdbook-lini.css) yourself:
+
+```toml
+[preprocessor.lini]
+inline-css = false
+
+[output.html]
+additional-css = ["mdbook-lini.css"]
+```
 
 ## Errors
 
