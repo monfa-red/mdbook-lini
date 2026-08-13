@@ -1,0 +1,22 @@
+[package]
+name = "mdbook-lini"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "mdbook preprocessor: renders ```lini fenced blocks to inline SVG"
+license = "MIT"
+repository = "https://github.com/monfa-red/mdbook-lini"
+homepage = "https://lini.rs"
+documentation = "https://lini.rs"
+readme = "README.md"
+keywords = ["mdbook", "preprocessor", "diagram", "svg", "lini"]
+categories = ["command-line-utilities", "visualization"]
+include = ["src/**/*", "README.md", "LICENSE", "mdbook-lini.css"]
+
+[dependencies]
+lini = "1.0.0-beta.2"
+serde_json = "1"
+
+[profile.release]
+lto = "thin"
+strip = "symbols"

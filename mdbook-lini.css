@@ -1,0 +1,74 @@
+/* mdbook-lini — styling for the figures the preprocessor emits.
+   Add to book.toml:  [output.html]  additional-css = ["mdbook-lini.css"]
+
+   Every Lini colour is a `light-dark()` pair keyed on `color-scheme`, so
+   binding that property to the book's theme is the whole light/dark
+   integration — no script, no re-render on toggle. */
+
+.lini-figure {
+    margin: 16px 0;
+    padding: 6px 0;
+    overflow-x: auto;
+}
+
+/* A figure scales down to the column, but no further than 75% of its natural
+   width — past that the labels stop reading, so the wrapper scrolls instead.
+   `--lini-w` is the natural width, set per figure by the preprocessor. */
+.lini-figure svg {
+    display: block;
+    margin-inline: auto;
+    max-width: 100%;
+    min-width: min(100%, calc(var(--lini-w, 0px) * 0.75));
+    height: auto;
+}
+
+/* mdbook's five built-in themes, sorted by how dark they are. A custom theme
+   adds its own class here. */
+html.light .lini,
+html.rust .lini {
+    color-scheme: light;
+}
+
+html.coal .lini,
+html.navy .lini,
+html.ayu .lini {
+    color-scheme: dark;
+}
+
+/* Sit the figure on the page rather than on a card of its own. */
+.lini {
+    --lini-bg: transparent;
+}
+
+/* A block that failed to compile. The message is already on stderr; this puts
+   it on the page too, so a broken diagram can't ship unnoticed. */
+.lini-error {
+    color: light-dark(#8b1a1a, #ff9b9b);
+    background: light-dark(#fdf2f2, #2b1618);
+    border: 1px solid light-dark(#8b1a1a, #ff9b9b);
+    padding: 12px 16px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    font-size: 0.875rem;
+}
+
+html.light .lini-error,
+html.rust .lini-error {
+    color-scheme: light;
+}
+
+html.coal .lini-error,
+html.navy .lini-error,
+html.ayu .lini-error {
+    color-scheme: dark;
+}
+
+/* On mobile, pull the figure into the page padding to reclaim width. */
+@media only screen and (max-width: 768px) {
+    .lini-figure {
+        margin-left: calc(var(--page-padding) * -1);
+        margin-right: calc(var(--page-padding) * -1);
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}
