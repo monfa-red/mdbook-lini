@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/monfa-red/mdbook-lini/main/assets/logo/lini_icon.svg" alt="Lini" width="128">
 </p>
 
-<p align="center"><strong>Diagrams in your mdbook, from plain text.</strong></p>
+<p align="center"><strong>Every figure in your mdbook, from plain text.</strong></p>
 
 <p align="center">
   <a href="https://crates.io/crates/mdbook-lini"><img src="https://img.shields.io/crates/v/mdbook-lini.svg" alt="crates.io"></a>
