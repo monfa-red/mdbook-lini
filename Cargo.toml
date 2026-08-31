@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-lini"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.88"
 description = "mdbook preprocessor: every figure from plain text — diagrams, charts, sequences, mindmaps, schematics, and technical drawings, rendered to inline SVG"
@@ -14,7 +14,14 @@ categories = ["command-line-utilities", "visualization"]
 include = ["src/**/*", "README.md", "LICENSE", "mdbook-lini.css"]
 
 [dependencies]
-lini = "1.0.0-beta.3"
+# Pinned exactly, on purpose. Cargo treats every 1.0.0 pre-release as
+# compatible, so a caret range here floats to whatever rc is newest at the
+# reader's install time — a version this crate was never built against. The
+# bump is Dependabot's job (.github/dependabot.yml), gated on CI.
+#
+# NOTE: this must name the release that carries `lini::highlight_html`, which
+# the source listing calls. rc.3 does not; publish lini first, then bump.
+lini = "=1.0.0-rc.3"
 serde_json = "1"
 
 [profile.release]
