@@ -1,0 +1,16 @@
+# Answering "do I have to redo this every time lini ships?" — no, but something
+# should check. A weekly PR bumps the pin below; CI compiles against the new
+# lini, runs the suite, and builds tests/book with the real mdbook. A lini
+# release that changes an API, a class name, or the SVG shape turns up as a red
+# PR instead of as a silent break in someone's book.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly

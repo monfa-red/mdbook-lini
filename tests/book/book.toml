@@ -1,0 +1,14 @@
+[book]
+title = "mdbook-lini fixture"
+src = "src"
+
+[build]
+build-dir = "out"
+
+[preprocessor.lini]
+
+# A deliberately hostile theme: it frames `pre` and `details` the way a real
+# book's stylesheet does, and unlayered, so it outranks ours. This is the
+# situation that put a caret and a box-inside-a-box on lini.rs.
+[output.html]
+additional-css = ["hostile.css"]

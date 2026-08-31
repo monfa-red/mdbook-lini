@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+      - run: cargo test --verbose
+
+  # The unit tests check the markup we emit; this checks that mdbook's parser
+  # kept it in one piece. That failure is invisible to `cargo test` and to the
+  # build — see tests/book/verify.py for what it looks like.
+  book:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: mdbook
+      - run: cargo build --release
+      - run: PATH="$PWD/target/release:$PATH" mdbook build tests/book
+      - run: python3 tests/book/verify.py tests/book/out/chapter_1.html

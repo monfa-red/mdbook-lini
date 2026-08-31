@@ -1,2 +1,6 @@
 target/
 .DS_Store
+
+# Local-only path override for developing against ../lini
+.cargo/
+tests/book/out/

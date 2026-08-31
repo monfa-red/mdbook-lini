@@ -1,0 +1,20 @@
+/* Stand-in for a book's own stylesheet. Unlayered on purpose: these rules
+   outrank everything mdbook-lini ships, which is the point of the fixture. */
+pre {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 12px;
+    background: #fafafa;
+}
+
+details {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 12px;
+    background: #f0f0f0;
+}
+
+details > summary {
+    display: list-item;
+    list-style: revert;
+}
