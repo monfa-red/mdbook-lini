@@ -32,6 +32,9 @@ and there is nothing else to install.
   the figures. `cargo install mdbook-lini` plus one line of config is the whole thing.
 - **Dark mode for free.** Colours are live CSS variables, so figures follow your theme
   toggle without a re-render.
+- **The source is one click away.** Each figure carries a small `</>` toggle that reveals
+  the Lini that drew it, syntax-highlighted at build time — still no JavaScript. A fence
+  word flips it, so a reference chapter can lead with the source instead.
 - **Fast and deterministic.** A typical diagram compiles in ~2 ms, byte-identically each
   run.
 
@@ -83,6 +86,51 @@ chapter's own directory.
 Blocks in other languages pass through untouched, as does a ` ```lini ` block quoted
 inside a wider fence — so you can document Lini in a Lini-powered book.
 
+## Showing the source
+
+Every figure carries a small `</>` in its top-right corner. Clicking it reveals the Lini
+that drew it, highlighted with the same vocabulary the VS Code and Zed grammars use — the
+colouring comes from Lini's own ledger, so a property gets its colour here the moment the
+language has it.
+
+The toggle is a checkbox and its label — pure CSS, so it costs no JavaScript, takes
+keyboard focus, and works with scripts off. The listing is your block's own text,
+verbatim, not reformatted; mdbook's copy button lands on it like any other code block.
+
+It is deliberately not a `<details>`. Your book's stylesheet is unlayered, so it outranks
+ours: a `<details>` gives your theme a second element to frame — a box inside the code
+block's box — and it carries a disclosure marker your theme can put back however we hide
+it. With a label there is no marker, and the `<pre>` is the only element your theme
+dresses. One frame, like every other code block on the page.
+
+### Choosing what a block shows
+
+One word on the fence, and each word means exactly one thing:
+
+| fence | shows | the toggle reveals |
+| --- | --- | --- |
+| ` ```lini ` | the figure | the source |
+| ` ```lini code ` | the source | the figure |
+| ` ```lini figure ` | the figure alone | — |
+| ` ```lini raw ` | the source alone | — |
+
+`code` is the one to reach for in a chapter that teaches syntax — the source is the
+lesson, and the figure is a click away rather than the other way round.
+
+`raw` is the odd one: it never reaches the compiler. That is the point of it. A fragment,
+a counter-example, or a deliberately broken line stays a highlighted listing instead of
+becoming an error box, so you can write about Lini that isn't meant to draw:
+
+````markdown
+```lini raw
+|box#hero| "…"   // a shape, not a whole file
+```
+````
+
+Whitespace or a comma both separate, so ` ```lini,figure ` reads the same. The three words
+are alternatives — name two and the last wins. A word we don't recognise is reported on
+stderr and ignored, never fatal.
+
 ## Theming
 
 Each figure is a `<div class="lini-figure">` wrapping the SVG. Lini emits every colour as
@@ -120,12 +168,15 @@ The wrapper carries `--lini-w`, the diagram's natural width. A figure scales dow
 the column but stops at 75% of that width — past there the labels stop reading, so the
 wrapper scrolls horizontally instead.
 
+The source listing is not bound by that floor: it fills the column and scrolls
+horizontally on its own when a line is long.
+
 ## Owning the styling
 
-mdbook-lini's own stylesheet — the wrapper above, the theme binding, and the error box —
-rides along in a `<style>` block on each chapter that has a figure. About 900 bytes, and
-none on chapters without one. It is not Lini's styling: that lives inside each SVG and
-travels with it regardless.
+mdbook-lini's own stylesheet — the wrapper above, the theme binding, the error box, and
+the source listing's palette — rides along in a `<style>` block on each chapter that has a
+figure. Under 3 kB minified, and none on chapters without one. It is not Lini's styling:
+that lives inside each SVG and travels with it regardless.
 
 To take it over instead, turn it off and link [`mdbook-lini.css`](mdbook-lini.css)
 yourself:

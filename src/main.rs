@@ -82,9 +82,9 @@ fn render(items: &mut [Value], src_root: &Path, bundled_css: bool) {
 
         if let Some(content) = chapter.get("content").and_then(Value::as_str) {
             let mut figures = 0;
-            let mut rendered = fence::rewrite(content, |source, line| {
+            let mut rendered = fence::rewrite(content, |source, line, words| {
                 figures += 1;
-                figure::render(source, &source_path, line, base_dir.as_deref())
+                figure::render(source, &source_path, line, base_dir.as_deref(), words)
             });
             // Only a chapter that drew something needs the stylesheet.
             if bundled_css && figures > 0 {

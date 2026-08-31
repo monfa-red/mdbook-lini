@@ -8,12 +8,13 @@ const LANG: &str = "lini";
 /// Rewrite every lini block in `markdown` through `render`.
 ///
 /// `render` is handed the block's source — the block's own indent stripped off
-/// each line, so a fence nested in a list still yields valid lini — and the
-/// 1-based line that source starts on. What it returns replaces the fence.
+/// each line, so a fence nested in a list still yields valid lini — the 1-based
+/// line that source starts on, and the words the info string carries after the
+/// language (`` ```lini figure ``). What it returns replaces the fence.
 ///
 /// Every fenced block is walked, not just ours, so a ```` ```lini ```` shown as
 /// an example inside a wider fence passes through as the text it is.
-pub fn rewrite(markdown: &str, mut render: impl FnMut(&str, usize) -> String) -> String {
+pub fn rewrite(markdown: &str, mut render: impl FnMut(&str, usize, &[&str]) -> String) -> String {
     let lines: Vec<&str> = markdown.split('\n').collect();
     let mut out = String::with_capacity(markdown.len());
     let mut i = 0;
@@ -24,13 +25,13 @@ pub fn rewrite(markdown: &str, mut render: impl FnMut(&str, usize) -> String) ->
             i += 1;
             continue;
         };
-        if fence.info == LANG && fence.closed {
+        if fence.is_lini && fence.closed {
             // Blank lines lift the figure clear of any paragraph the
             // surrounding markdown would otherwise pull it into.
             let source = dedent(&lines[fence.content.clone()], fence.indent);
             out.push_str("\n\n");
             out.push_str(fence.indent);
-            out.push_str(&render(&source, fence.content.start + 1));
+            out.push_str(&render(&source, fence.content.start + 1, &fence.words));
             out.push_str("\n\n");
         } else {
             for j in i..=fence.end {
@@ -46,8 +47,10 @@ pub fn rewrite(markdown: &str, mut render: impl FnMut(&str, usize) -> String) ->
 struct Fence<'a> {
     /// The leading whitespace of the opening fence line.
     indent: &'a str,
-    /// The info string — the language tag, if the fence carries one.
-    info: &'a str,
+    /// Whether the info string's language is ours.
+    is_lini: bool,
+    /// The info string's words after the language — `` ```lini figure ``.
+    words: Vec<&'a str>,
     /// The block's content, exclusive of both fence lines.
     content: Range<usize>,
     /// The block's last line: its closing fence, or the document's last line
@@ -70,14 +73,26 @@ fn fence_at<'a>(lines: &[&'a str], start: usize) -> Option<Fence<'a>> {
         return None;
     }
 
+    let (lang, words) = split_info(info);
     let close = (start + 1..lines.len()).find(|&j| closes(lines[j], indent, marker, width));
     Some(Fence {
         indent,
-        info,
+        is_lini: lang == Some(LANG),
+        words,
         content: start + 1..close.unwrap_or(lines.len()),
         end: close.unwrap_or(lines.len() - 1),
         closed: close.is_some(),
     })
+}
+
+/// Split an info string into its language and the words that follow it.
+///
+/// Whitespace and commas both separate, because mdbook's own fences take
+/// commas — ```` ```rust,ignore ```` — so a reader who writes
+/// ```` ```lini,figure ```` means what they appear to mean.
+fn split_info(info: &str) -> (Option<&str>, Vec<&str>) {
+    let mut parts = info.split([' ', '\t', ',']).filter(|p| !p.is_empty());
+    (parts.next(), parts.collect())
 }
 
 /// A closing fence carries the opening indent, then at least as many of the
@@ -116,11 +131,21 @@ mod tests {
     /// Collect what `rewrite` hands the renderer, and stub the output.
     fn calls(markdown: &str) -> (Vec<(String, usize)>, String) {
         let mut seen = Vec::new();
-        let out = rewrite(markdown, |source, line| {
+        let out = rewrite(markdown, |source, line, _words| {
             seen.push((source.to_owned(), line));
             "<svg/>".into()
         });
         (seen, out)
+    }
+
+    /// The words an info string yields, for the block it opens.
+    fn words_of(markdown: &str) -> Vec<Vec<String>> {
+        let mut seen = Vec::new();
+        rewrite(markdown, |_source, _line, words| {
+            seen.push(words.iter().map(|w| (*w).to_owned()).collect());
+            "<svg/>".into()
+        });
+        seen
     }
 
     #[test]
@@ -165,5 +190,37 @@ mod tests {
     fn renders_two_blocks_in_one_chapter() {
         let (seen, _) = calls("```lini\na\n```\n\ntext\n\n```lini\nb\n```\n");
         assert_eq!(seen, [("a".to_owned(), 2), ("b".to_owned(), 8)]);
+    }
+
+    #[test]
+    fn a_bare_fence_carries_no_words() {
+        assert_eq!(words_of("```lini\na\n```\n"), [Vec::<String>::new()]);
+    }
+
+    #[test]
+    fn a_word_after_the_language_is_reported() {
+        assert_eq!(words_of("```lini figure\na\n```\n"), [["figure"]]);
+    }
+
+    /// mdbook's own fences take commas — ```` ```rust,ignore ```` — so a reader
+    /// who writes ```` ```lini,figure ```` means the same thing.
+    #[test]
+    fn commas_separate_words_as_whitespace_does() {
+        assert_eq!(words_of("```lini,figure\na\n```\n"), [["figure"]]);
+        assert_eq!(words_of("```lini,  figure ,\na\n```\n"), [["figure"]]);
+    }
+
+    #[test]
+    fn several_words_are_all_reported() {
+        assert_eq!(words_of("```lini figure other\na\n```\n"), [["figure", "other"]]);
+    }
+
+    /// The language must be the whole first word: a fence for some other
+    /// language whose name merely starts with ours is not ours.
+    #[test]
+    fn a_longer_language_name_is_not_ours() {
+        let (seen, out) = calls("```linigraph\na -> b\n```\n");
+        assert!(seen.is_empty(), "{seen:?}");
+        assert!(out.contains("linigraph"));
     }
 }

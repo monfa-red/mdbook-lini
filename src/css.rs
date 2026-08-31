@@ -15,6 +15,12 @@ use std::sync::OnceLock;
 const SOURCE: &str = include_str!("../mdbook-lini.css");
 
 /// The `<style>` block to prepend to a chapter, built once.
+///
+/// Two sheets ride along: ours, layered, and Lini's own token palette, taken
+/// verbatim from [`lini::highlight_css`]. The palette is not copied here on
+/// purpose — it is the stylesheet the highlighter's own markup is written
+/// against, so a colour it adds or renames arrives with the compiler instead of
+/// drifting until someone notices a listing has gone monochrome.
 pub fn style_tag() -> &'static str {
     static TAG: OnceLock<String> = OnceLock::new();
     // `@layer a, b` fixes the order up front: Lini's own defaults sit below
@@ -27,8 +33,13 @@ pub fn style_tag() -> &'static str {
     // out of the raw HTML block the style tag opens.
     TAG.get_or_init(|| {
         format!(
-            "<style>@layer lini.defaults, mdbook-lini;@layer mdbook-lini {{{}}}</style>\n\n",
-            minify(SOURCE)
+            "<style>@layer lini.defaults, mdbook-lini;\
+             @layer mdbook-lini {{{}}}{}</style>\n\n",
+            minify(SOURCE),
+            // Lini's sheet declares its variables inside `@layer lini.defaults`
+            // itself, so it goes outside our block — nesting it would rename
+            // that layer and change what outranks what.
+            minify(&lini::highlight_css())
         )
     })
 }
@@ -88,6 +99,22 @@ mod tests {
         // nothing at all.
         let order = tag.find("@layer lini.defaults,").unwrap();
         assert!(order < tag.find("@layer mdbook-lini {").unwrap());
+    }
+
+    /// The token palette is Lini's, not a copy of it here — this is what
+    /// fails if someone re-adds one, or if the highlighter renames a class
+    /// and the sheet stops matching its own markup.
+    #[test]
+    fn the_token_palette_comes_from_lini() {
+        let tag = style_tag();
+        assert!(tag.contains(".lini-tok-string"), "{tag}");
+        assert!(tag.contains("--lini-tok-string"), "{tag}");
+        assert!(!SOURCE.contains("tok-"), "the palette was copied back into our sheet");
+
+        // A span the highlighter emits must be a selector the sheet paints.
+        let html = lini::highlight_html("|box| \"hi\"");
+        let class = html.split("<span class=\"").nth(1).expect("a span").split('"').next().unwrap();
+        assert!(tag.contains(&format!(".{class}")), "no rule paints `{class}`: {tag}");
     }
 
     #[test]

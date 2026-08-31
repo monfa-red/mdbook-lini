@@ -72,3 +72,216 @@ html.ayu .lini-error {
         padding-right: 0.75rem;
     }
 }
+
+/* ── The source listing ─────────────────────────────────────────────────
+   A figure and the source that drew it, with a checkbox between them. Pure
+   CSS: it works with scripts off, takes keyboard focus, and needs no
+   runtime — the promise the figures themselves make. */
+
+.lini-figure-block {
+    position: relative;
+    width: 100%;
+    margin: 16px 0;
+}
+
+/* The figure owns the margin when it stands alone; inside the block, the
+   block owns it. */
+.lini-figure-block > .lini-figure {
+    margin: 0;
+}
+
+/* The toggle. A checkbox and its label, never a <details>: that element
+   carries a disclosure marker, and a book's own stylesheet is unlayered — so
+   it outranks this file and can put the caret back however we hide it. A
+   label has no marker to begin with. */
+.lini-view-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* The button wears mdbook's own button chrome — the same border, radius and
+   theme variables its copy button uses — so the two read as one row rather
+   than as a bare glyph beside a framed one. The variables are mdbook's; the
+   fallbacks keep it legible in a book that defines none of them. */
+.lini-view-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 28px;
+    border: 1px solid var(--icons, currentColor);
+    border-radius: 4px;
+    background-color: var(--theme-popup-bg, transparent);
+    color: var(--icons, currentColor);
+    cursor: pointer;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.1s linear, opacity 0.1s linear, color 0.1s,
+        border-color 0.1s, background-color 0.1s;
+}
+
+/* mdbook reveals a block's buttons when the pointer is on the block; this
+   follows that, so a page of figures stays quiet until you reach for one.
+   Checked counts too — having opened a view, you need the way back. */
+.lini-figure-block:hover .lini-view-button,
+.lini-view-toggle:focus-visible + .lini-view-button,
+.lini-view-toggle:checked + .lini-view-button {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Keyboard focus lands on the checkbox, so the ring has to be drawn here. */
+.lini-view-toggle:focus-visible + .lini-view-button {
+    outline: 2px solid var(--icons-hover, currentColor);
+    outline-offset: 2px;
+}
+
+.lini-view-button:hover {
+    color: var(--sidebar-active, currentColor);
+    border-color: var(--icons-hover, currentColor);
+    background-color: var(--theme-hover, transparent);
+}
+
+/* No pointer to hover with, so nothing would ever reveal it — it stays. */
+@media (hover: none) {
+    .lini-view-button {
+        visibility: visible;
+        opacity: 1;
+    }
+}
+
+/* Whichever view the mode did not put first is the one behind the toggle, so
+   one rule hides either. It hides a plain <div>: hiding the <pre> or the
+   figure directly would be a rule a host theme could outrank, and nothing
+   styles a div named like this one. */
+.lini-view-toggle:not(:checked) ~ .lini-alt-view {
+    display: none;
+}
+
+.lini-alt-view {
+    margin-top: 8px;
+}
+
+.lini-alt-view > .lini-figure,
+.lini-alt-view > .lini-source {
+    margin: 0;
+}
+
+/* `code` puts the listing first, so the control joins mdbook's own button row
+   inside the `<pre>` (we emit the `.buttons` div; mdbook's script adopts it and
+   drops the copy button in beside ours). mdbook positions the row, so the two
+   cannot drift apart — and because ours is inside the `<pre>`, reaching for it
+   never breaks `pre:hover`, which is what made the copy button vanish when the
+   button was merely placed on top.
+
+   The row is a `<span>`, not the `<div>` mdbook's own script builds: mdbook
+   0.5 runs its output through an HTML rewriter that pretty-prints newlines
+   around block elements, and a newline inside a `<pre>` is a blank line the
+   reader sees. mdbook finds the row by class, and it is absolutely positioned
+   either way, so nothing else changes.
+
+   In the row, the row does the positioning; ours only has to match the box of
+   the button next to it. */
+.lini-source pre > .buttons > .lini-view-button {
+    position: static;
+    visibility: inherit;
+    opacity: inherit;
+    width: auto;
+    height: auto;
+    margin: 0 5px;
+    /* mdbook's button takes its height from a 23px line box rather than from
+       its glyph, so ours borrows the same measure — `1lh` at that font size —
+       rather than hard-coding a height that would drift if mdbook retuned it.
+       The px value is that measure today, for browsers without `lh`.
+
+       mdbook's own padding is asymmetric (`2px 4px 0 6px`), tuned around its
+       21x20 glyph; copying it put our smaller one off-centre both ways. Equal
+       padding plus flex centring puts the glyph in the middle of the box —
+       which is what centring it actually means. */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: content-box;
+    padding: 1px 5px;
+    min-height: 27px;
+    min-height: 1lh;
+    font-size: 23px;
+    line-height: normal;
+    vertical-align: top;
+}
+
+/* mdbook reveals that row on `pre:hover` alone, which no touch screen can
+   satisfy — and in this mode the row is the only way to the figure, so a
+   phone would never reach it. mdbook's rule is unlayered and would otherwise
+   outrank ours; an important declaration inside a layer is the one thing that
+   does beat a normal unlayered one. Scoped to pointers that cannot hover, and
+   the single `!important` this stylesheet contains. */
+@media (hover: none) {
+    .lini-source pre > .buttons {
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+}
+
+/* Fallbacks for a page read with scripts off. mdbook's script adds `.hljs`
+   to the code element, which brings the theme's code background, colour and
+   horizontal scrolling — and it is unlayered, so it wins the moment it
+   lands. */
+.lini-source > pre {
+    margin: 0;
+    width: 100%;
+    overflow-x: auto;
+    background: light-dark(#f6f7f6, #1d1f21);
+}
+
+.lini-source > pre > code {
+    display: block;
+    padding: 1rem;
+    white-space: pre;
+    font-size: 0.875em;
+}
+
+/* The panel is a bare wrapper on purpose — it takes no frame of its own, so
+   the <pre> inside it is the single box a theme dresses, exactly as it
+   dresses every other code block.
+
+   The token palette is NOT here: it comes from `lini::highlight_css()`, the
+   sheet the highlighter's own markup is written against, so a colour it adds
+   or renames arrives with the compiler rather than drifting until someone
+   notices a listing has gone monochrome. `color-scheme` stays ours to bind —
+   Lini's sheet deliberately sets none, so its `light-dark()` pairs read
+   whatever the host puts on the listing. */
+.lini-source {
+    width: 100%;
+    margin: 16px 0;
+}
+
+html.light .lini-source,
+html.rust .lini-source {
+    color-scheme: light;
+}
+
+html.coal .lini-source,
+html.navy .lini-source,
+html.ayu .lini-source {
+    color-scheme: dark;
+}
+
+/* On paper the toggle is not a control, just a mark. The listing prints as
+   the reader left it — open if they opened it. */
+@media print {
+    .lini-view-button {
+        display: none;
+    }
+}
