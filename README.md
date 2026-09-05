@@ -2,7 +2,9 @@
   <img src="https://raw.githubusercontent.com/monfa-red/mdbook-lini/main/assets/logo/lini_icon.svg" alt="Lini" width="128">
 </p>
 
-<p align="center"><strong>Every figure in your mdbook, from plain text.</strong></p>
+<p align="center"><strong>From mindmap to blueprint, in your mdbook.</strong></p>
+
+<p align="center">Every figure from plain text — <a href="https://lini.rs">lini.rs</a> has the language, the tour and a playground.</p>
 
 <p align="center">
   <a href="https://crates.io/crates/mdbook-lini"><img src="https://img.shields.io/crates/v/mdbook-lini.svg" alt="crates.io"></a>
@@ -57,8 +59,9 @@ That's it — no `additional-css`, no files to copy.
 
 ## Writing a figure
 
-Any Lini source works. The [language reference](https://lini.rs) covers it in full; this
-is the shape of it:
+Any Lini source works. The [tour](https://lini.rs/docs/) walks every family and the
+[reference](https://lini.rs/docs/reference/00-quickstart.html) covers it in full; this is
+the shape of it:
 
 ````markdown
 ```lini
