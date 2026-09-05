@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-lini"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 rust-version = "1.88"
 description = "mdbook preprocessor: every figure from plain text — diagrams, charts, sequences, mindmaps, schematics, and technical drawings, rendered to inline SVG"
@@ -21,7 +21,7 @@ include = ["src/**/*", "README.md", "LICENSE", "mdbook-lini.css"]
 #
 # NOTE: this must name the release that carries `lini::highlight_html`, which
 # the source listing calls. rc.3 does not; publish lini first, then bump.
-lini = "=1.0.0-rc.3"
+lini = "=1.0.0-rc.4"
 serde_json = "1"
 
 [profile.release]
