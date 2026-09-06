@@ -108,17 +108,26 @@ dresses. One frame, like every other code block on the page.
 
 ### Choosing what a block shows
 
-One word on the fence, and each word means exactly one thing:
+A word on the fence, and each word means exactly one thing:
 
 | fence | shows | the toggle reveals |
 | --- | --- | --- |
 | ` ```lini ` | the figure | the source |
 | ` ```lini code ` | the source | the figure |
+| ` ```lini both ` | the figure, then the source | — nothing to reveal |
+| ` ```lini code both ` | the source, then the figure | — nothing to reveal |
 | ` ```lini figure ` | the figure alone | — |
 | ` ```lini raw ` | the source alone | — |
 
 `code` is the one to reach for in a chapter that teaches syntax — the source is the
 lesson, and the figure is a click away rather than the other way round.
+
+`both` drops the toggle and puts the two on the page together. Reach for it when the
+source *is* the lesson: in a tutorial, a reader meeting the language for the first time
+should not have to discover a button to see what drew the picture. `code` and `both` are
+independent — the first names which view leads, the second says the other one is already
+open — so ` ```lini code both ` reads source-then-figure, the order a book teaching a
+language usually wants.
 
 `raw` is the odd one: it never reaches the compiler. That is the point of it. A fragment,
 a counter-example, or a deliberately broken line stays a highlighted listing instead of
@@ -130,9 +139,9 @@ becoming an error box, so you can write about Lini that isn't meant to draw:
 ```
 ````
 
-Whitespace or a comma both separate, so ` ```lini,figure ` reads the same. The three words
-are alternatives — name two and the last wins. A word we don't recognise is reported on
-stderr and ignored, never fatal.
+Whitespace or a comma both separate, so ` ```lini,figure ` reads the same. Each word sets
+what it names, so they read in any order; `figure` and `raw` name a whole arrangement at
+once. A word we don't recognise is reported on stderr and ignored, never fatal.
 
 ## Theming
 
