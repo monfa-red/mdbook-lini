@@ -35,7 +35,11 @@ html.ayu .lini {
     color-scheme: dark;
 }
 
-/* Sit the figure on the page rather than on a card of its own. */
+/* Sit the figure on the page rather than on a card of its own: `fill: --bg` on
+   a root asks for the *host's* paper (Lini SPEC 10.1), and a book with no
+   opinion about figures has no colour to give — transparent is the page,
+   whatever the page is. A figure wanting a paper of its own states a literal
+   `fill:`, which no alias can reach. */
 .lini {
     --lini-bg: transparent;
 }
