@@ -32,18 +32,21 @@ const ICON_FIGURE: &str = concat!(
     r#"<path d="M20.5 17.5 14.25 11.25 5 19.25"/></svg>"#,
 );
 
-/// What a block shows: which view leads, and how the other one is reached.
+/// What a block shows: which view leads, and what follows it.
 ///
-/// Those are two independent questions, so the fence answers them with two
-/// independent words — `code` names the lead, `both` names the second — and a
-/// fence may say each: ```` ```lini code both ````.
+/// A block has two views — the figure, and the source that drew it — and the
+/// fence names them in the order they appear: `figure-code` is the figure and
+/// then its source. A single word names the lead and leaves the other folded
+/// behind the toggle, which is the default arrangement; `-only` says nothing
+/// follows at all.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct Mode {
     lead: View,
     second: Second,
 }
 
-/// One of the two things a block can show.
+/// One of the two things a block can show. The fence spells [`View::Source`]
+/// `code`, which is what a reader calls it.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum View {
     Figure,
@@ -53,13 +56,15 @@ enum View {
 /// What follows the leading view.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Second {
-    /// The default: behind the toggle button, one view on the page at a time.
-    Toggle,
-    /// `both` — under the lead, with no toggle at all. For the figure whose
-    /// source *is* the lesson: a reader learning the language should not have
-    /// to discover a button to see what drew the picture.
+    /// The default: folded behind the toggle button, one view on the page at
+    /// a time.
+    Folded,
+    /// Named second in the fence — `figure-code`, `code-figure` — so it is on
+    /// the page under the lead, with no toggle at all. For the block whose
+    /// source *is* the lesson: a reader meeting the language for the first
+    /// time should not have to discover a button to see what drew the picture.
     Shown,
-    /// `figure` and `raw` — there is no second view.
+    /// `-only`: there is no second view.
     None,
 }
 
@@ -67,16 +72,17 @@ impl Mode {
     /// Whether the block needs the compiler.
     ///
     /// The source leading with nothing after it is the one arrangement that
-    /// never puts a figure on the page — which is exactly what `raw` is for: a
-    /// fragment, or a deliberate counter-example, stays a listing to read
-    /// instead of becoming an error box.
+    /// never puts a figure on the page, so `code-only` is also the fence that
+    /// never compiles: a fragment, or a deliberate counter-example, stays a
+    /// listing to read instead of becoming an error box. That used to be a
+    /// word of its own (`raw`); it is a consequence of the grammar now.
     fn draws(self) -> bool {
         !(self.lead == View::Source && self.second == Second::None)
     }
 }
 
 /// Compile one block's source into its figure, and — unless the fence says
-/// `figure` — the collapsed listing of the source beside it.
+/// `figure-only` — the listing of the source with it.
 ///
 /// A block that fails to compile becomes a visible error box and the message
 /// goes to stderr — the build still finishes, so one bad diagram never costs
@@ -91,8 +97,8 @@ pub fn render(
     let mode = mode(words, chapter, first_line);
 
     // A block showing no figure never reaches the compiler, which is the whole
-    // point of `raw`: a fragment, a counter-example, or a deliberate syntax
-    // error is a listing to read, not a figure that failed to draw.
+    // point of `code-only`: a fragment, a counter-example, or a deliberate
+    // syntax error is a listing to read, not a figure that failed to draw.
     if !mode.draws() {
         return listing(source, "");
     }
@@ -114,13 +120,13 @@ pub fn render(
             report(routing, &padded, chapter);
             let id = toggle_id(chapter, first_line);
             match (mode.second, mode.lead) {
-                // `figure`: the figure alone, and no wrapper — there is no
-                // second view to position against it.
+                // `figure-only`: the figure alone, and no wrapper — there is
+                // no second view to position against it.
                 (Second::None, _) => wrap(&svg),
 
                 // Figure first: the control floats over the figure, which has
                 // no button row of its own to join.
-                (Second::Toggle, View::Figure) => format!(
+                (Second::Folded, View::Figure) => format!(
                     "<div class=\"{BLOCK}\">{figure}{toggle}{button}\
                      <div class=\"lini-alt-view\">{alt}</div></div>",
                     figure = wrap(&svg),
@@ -130,7 +136,7 @@ pub fn render(
                 ),
                 // Source first: the control joins mdbook's own button row
                 // inside the `<pre>` — see `listing`.
-                (Second::Toggle, View::Source) => format!(
+                (Second::Folded, View::Source) => format!(
                     "<div class=\"{BLOCK}\">{toggle}{code}\
                      <div class=\"lini-alt-view\">{alt}</div></div>",
                     toggle = checkbox("figure", &id),
@@ -144,8 +150,8 @@ pub fn render(
                     alt = wrap(&svg),
                 ),
 
-                // `both`: the two views stacked in the lead's order, with no
-                // checkbox and no button. The second view keeps the class the
+                // Both named: the two views stacked in the fence's order, with
+                // no checkbox and no button. The second keeps the class the
                 // toggled one wears — it is the same box in the same place —
                 // and the rule that hides it is written against the checkbox,
                 // so a block that emits none has nothing to hide it. The
@@ -171,21 +177,35 @@ pub fn render(
     }
 }
 
-/// Read the mode off the fence's words.
+/// Read the mode off the fence's word.
 ///
-/// Each word sets what it names, so they read in any order and combine:
-/// `code` moves the lead, `both` opens the second view, and `figure` / `raw`
-/// name a whole arrangement at once. A word we don't know is reported and
-/// ignored, not fatal — the same bargain the rest of this module strikes: a
-/// typo in an info string costs a line of build output, never the figure.
+/// Six spellings of one grammar — the views a block shows, in the order it
+/// shows them. Each names a whole arrangement, so they are alternatives and
+/// the last one written wins. A word we don't know is reported and ignored,
+/// not fatal — the same bargain the rest of this module strikes: a typo in an
+/// info string costs a line of build output, never the figure.
 fn mode(words: &[&str], chapter: &str, line: usize) -> Mode {
-    let mut mode = Mode { lead: View::Figure, second: Second::Toggle };
+    use Second::{Folded, None, Shown};
+    use View::{Figure, Source};
+
+    let mut mode = Mode { lead: Figure, second: Folded };
     for word in words {
         mode = match *word {
-            "figure" => Mode { lead: View::Figure, second: Second::None },
-            "code" => Mode { lead: View::Source, ..mode },
-            "both" => Mode { second: Second::Shown, ..mode },
-            "raw" => Mode { lead: View::Source, second: Second::None },
+            "figure" => Mode { lead: Figure, second: Folded },
+            "code" => Mode { lead: Source, second: Folded },
+            "figure-code" => Mode { lead: Figure, second: Shown },
+            "code-figure" => Mode { lead: Source, second: Shown },
+            "figure-only" => Mode { lead: Figure, second: None },
+            "code-only" => Mode { lead: Source, second: None },
+            // `raw` was `code-only` before the views had a grammar to name
+            // them in. It stays readable for one release rather than turning
+            // a book's fragments into error boxes on upgrade.
+            "raw" => {
+                eprintln!(
+                    "mdbook-lini: {chapter}:{line}: `raw` is now `code-only` — still works, rename when convenient"
+                );
+                Mode { lead: Source, second: None }
+            }
             other => {
                 eprintln!(
                     "mdbook-lini: {chapter}:{line}: unknown word `{other}` on a lini fence — ignoring"
@@ -318,7 +338,7 @@ mod tests {
     /// beside the figure, never between it and its own sizing.
     #[test]
     fn wraps_a_diagram_with_its_natural_width() {
-        for words in [&[][..], &["figure"][..]] {
+        for words in [&[][..], &["figure-only"][..]] {
             let html = render("a -> b", "demo.md", 1, None, words);
             assert!(
                 html.contains("<div class=\"lini-figure\" style=\"--lini-w: "),
@@ -436,8 +456,8 @@ mod tests {
     }
 
     #[test]
-    fn the_figure_word_emits_the_bare_figure() {
-        let html = render("a -> b", "demo.md", 1, None, &["figure"]);
+    fn the_figure_only_word_emits_the_bare_figure() {
+        let html = render("a -> b", "demo.md", 1, None, &["figure-only"]);
         assert!(html.starts_with("<div class=\"lini-figure\" style=\"--lini-w: "), "{html}");
         assert!(!html.contains("lini-source"), "{html}");
         assert!(!html.contains("lini-figure-block"), "{html}");
@@ -464,7 +484,7 @@ mod tests {
 
     #[test]
     fn a_bare_figure_emits_no_blank_line() {
-        let html = render(SPACED, "demo.md", 1, None, &["figure"]);
+        let html = render(SPACED, "demo.md", 1, None, &["figure-only"]);
         assert_eq!(blank_line(&html), None, "{html}");
     }
 
@@ -518,12 +538,12 @@ mod tests {
         assert!(html.contains("<label class=\"lini-view-button\""), "{html}");
     }
 
-    /// `both` is for the teaching figure, where the source is the lesson
-    /// rather than a detail: a reader should not have to find a button to see
-    /// what drew the picture.
+    /// Naming both views is for the teaching figure, where the source is the
+    /// lesson rather than a detail: a reader should not have to find a button
+    /// to see what drew the picture.
     #[test]
-    fn the_both_word_shows_the_figure_and_the_source_at_once() {
-        let html = render("a -> b", "demo.md", 1, None, &["both"]);
+    fn figure_code_shows_the_figure_and_the_source_at_once() {
+        let html = render("a -> b", "demo.md", 1, None, &["figure-code"]);
         let figure_at = html.find("lini-figure\"").expect("a figure");
         let source_at = html.find("lini-source").expect("a listing");
         assert!(figure_at < source_at, "the source leads: {html}");
@@ -536,21 +556,36 @@ mod tests {
     /// mechanism, is what puts both views on the page.
     #[test]
     fn a_shown_second_view_wears_the_class_the_hidden_one_wears() {
-        let html = render("a -> b", "demo.md", 1, None, &["both"]);
+        let html = render("a -> b", "demo.md", 1, None, &["figure-code"]);
         assert!(html.starts_with("<div class=\"lini-figure-block lini-open\">"), "{html}");
         assert!(html.contains("<div class=\"lini-alt-view\">"), "{html}");
     }
 
-    /// The two words are independent: `code` names the lead and `both` opens
-    /// the second view, so together they stack source over figure.
+    /// The compound reads in the order it is written, so the same two views
+    /// swap places when the fence names them the other way round.
     #[test]
-    fn code_and_both_together_lead_with_the_source() {
-        for words in [&["code", "both"][..], &["both", "code"][..]] {
-            let html = render("a -> b", "demo.md", 1, None, words);
-            let source_at = html.find("lini-source").expect("a listing");
-            let figure_at = html.find("lini-figure\"").expect("a figure");
-            assert!(source_at < figure_at, "{words:?}: the figure leads: {html}");
-            assert!(!html.contains("lini-view-toggle"), "{words:?}: {html}");
+    fn code_figure_leads_with_the_source() {
+        let html = render("a -> b", "demo.md", 1, None, &["code-figure"]);
+        let source_at = html.find("lini-source").expect("a listing");
+        let figure_at = html.find("lini-figure\"").expect("a figure");
+        assert!(source_at < figure_at, "the figure leads: {html}");
+        assert!(!html.contains("lini-view-toggle"), "{html}");
+    }
+
+    /// A single word names the lead and folds the other away — so `figure`
+    /// spells the default out loud, and `code` is its mirror.
+    #[test]
+    fn a_single_word_folds_the_other_view_behind_the_toggle() {
+        assert_eq!(
+            render("a -> b", "demo.md", 1, None, &["figure"]),
+            render("a -> b", "demo.md", 1, None, &[]),
+        );
+        for (word, first) in [("figure", "lini-figure\""), ("code", "lini-source")] {
+            let html = render("a -> b", "demo.md", 1, None, &[word]);
+            let lead = html.find(first).expect("the lead view");
+            let alt = html.find("lini-alt-view").expect("a folded view");
+            assert!(lead < alt, "`{word}` does not lead with {first}: {html}");
+            assert!(html.contains("lini-view-toggle"), "`{word}` has no toggle: {html}");
         }
     }
 
@@ -558,39 +593,50 @@ mod tests {
     /// mdbook builds its own for the copy button, as it does on any `<pre>`.
     #[test]
     fn a_shown_pair_leaves_mdbooks_button_row_to_mdbook() {
-        let html = render("a -> b", "demo.md", 1, None, &["code", "both"]);
+        let html = render("a -> b", "demo.md", 1, None, &["code-figure"]);
         assert!(!html.contains("class=\"buttons\""), "{html}");
     }
 
     #[test]
     fn a_shown_pair_emits_no_blank_line() {
-        for words in [&["both"][..], &["code", "both"][..]] {
+        for words in [&["figure-code"][..], &["code-figure"][..]] {
             let html = render(SPACED, "demo.md", 1, None, words);
             assert_eq!(blank_line(&html), None, "{words:?}: {html}");
         }
     }
 
     #[test]
-    fn the_raw_word_emits_a_listing_and_nothing_else() {
-        let html = render("a -> b", "demo.md", 1, None, &["raw"]);
+    fn code_only_emits_a_listing_and_nothing_else() {
+        let html = render("a -> b", "demo.md", 1, None, &["code-only"]);
         assert!(html.contains("lini-source"), "{html}");
-        assert!(!html.contains("<svg"), "raw drew a figure: {html}");
-        assert!(!html.contains("lini-view-toggle"), "raw carries a toggle: {html}");
+        assert!(!html.contains("<svg"), "code-only drew a figure: {html}");
+        assert!(!html.contains("lini-view-toggle"), "code-only carries a toggle: {html}");
         assert!(!html.contains("lini-figure"), "{html}");
     }
 
-    /// The point of `raw`: a fragment or a deliberate counter-example is a
-    /// listing, not an error box. Nothing compiles it, so nothing can fail.
+    /// `raw` was this arrangement before the views had a grammar to name them
+    /// in. Upgrading a book must not turn its fragments into error boxes.
     #[test]
-    fn a_raw_block_is_never_compiled() {
-        let html = render("|box| { fill:", "demo.md", 1, None, &["raw"]);
-        assert!(!html.contains("lini-error"), "raw reported a compile error: {html}");
-        assert!(html.contains("lini-tok-"), "raw lost its highlighting: {html}");
+    fn raw_still_reads_as_code_only() {
+        assert_eq!(
+            render("|box| { fill:", "demo.md", 1, None, &["raw"]),
+            render("|box| { fill:", "demo.md", 1, None, &["code-only"]),
+        );
+    }
+
+    /// The point of `code-only`: a fragment or a deliberate counter-example is
+    /// a listing, not an error box. Nothing compiles it, so nothing can fail —
+    /// and that falls out of the grammar rather than being a rule of its own.
+    #[test]
+    fn a_code_only_block_is_never_compiled() {
+        let html = render("|box| { fill:", "demo.md", 1, None, &["code-only"]);
+        assert!(!html.contains("lini-error"), "code-only reported a compile error: {html}");
+        assert!(html.contains("lini-tok-"), "code-only lost its highlighting: {html}");
     }
 
     #[test]
-    fn a_raw_listing_emits_no_blank_line() {
-        let html = render(SPACED, "demo.md", 1, None, &["raw"]);
+    fn a_code_only_listing_emits_no_blank_line() {
+        let html = render(SPACED, "demo.md", 1, None, &["code-only"]);
         assert_eq!(blank_line(&html), None, "{html}");
     }
 

@@ -108,40 +108,42 @@ dresses. One frame, like every other code block on the page.
 
 ### Choosing what a block shows
 
-A word on the fence, and each word means exactly one thing:
+A block has two views — the figure, and the source that drew it. One word on the fence
+names them, in the order they appear:
 
-| fence | shows | the toggle reveals |
-| --- | --- | --- |
-| ` ```lini ` | the figure | the source |
-| ` ```lini code ` | the source | the figure |
-| ` ```lini both ` | the figure, then the source | — nothing to reveal |
-| ` ```lini code both ` | the source, then the figure | — nothing to reveal |
-| ` ```lini figure ` | the figure alone | — |
-| ` ```lini raw ` | the source alone | — |
+| fence | shows |
+| --- | --- |
+| ` ```lini ` | the figure, its source folded behind the button |
+| ` ```lini figure ` | the same, said out loud |
+| ` ```lini code ` | the source, the figure folded behind the button |
+| ` ```lini figure-code ` | the figure, then its source — both on the page |
+| ` ```lini code-figure ` | the source, then the figure — both on the page |
+| ` ```lini figure-only ` | the figure, nothing else |
+| ` ```lini code-only ` | the source, nothing else |
 
-`code` is the one to reach for in a chapter that teaches syntax — the source is the
-lesson, and the figure is a click away rather than the other way round.
+A single word names the lead and leaves the other view folded — that is the default, and
+` ```lini figure ` is simply the default spelled out. A compound names both, in order, and
+drops the toggle: reach for it when the source *is* the lesson, since a reader meeting the
+language for the first time should not have to discover a button to see what drew the
+picture. `code-figure` is the one a tutorial usually wants — listing first, then the result.
 
-`both` drops the toggle and puts the two on the page together. Reach for it when the
-source *is* the lesson: in a tutorial, a reader meeting the language for the first time
-should not have to discover a button to see what drew the picture. `code` and `both` are
-independent — the first names which view leads, the second says the other one is already
-open — so ` ```lini code both ` reads source-then-figure, the order a book teaching a
-language usually wants.
-
-`raw` is the odd one: it never reaches the compiler. That is the point of it. A fragment,
-a counter-example, or a deliberately broken line stays a highlighted listing instead of
-becoming an error box, so you can write about Lini that isn't meant to draw:
+`code-only` never reaches the compiler. It does not need a rule of its own: a block showing
+the source and nothing else has no figure to draw, so a fragment, a counter-example or a
+deliberately broken line stays a highlighted listing instead of becoming an error box.
 
 ````markdown
-```lini raw
+```lini code-only
 |box#hero| "…"   // a shape, not a whole file
 ```
 ````
 
-Whitespace or a comma both separate, so ` ```lini,figure ` reads the same. Each word sets
-what it names, so they read in any order; `figure` and `raw` name a whole arrangement at
-once. A word we don't recognise is reported on stderr and ignored, never fatal.
+Whitespace or a comma both separate, so ` ```lini,figure ` reads the same. The words are
+alternatives, each naming a whole arrangement — write two and the last wins. A word we
+don't recognise is reported on stderr and ignored, never fatal.
+
+> **Renamed in 0.4.** `raw` is now `code-only`; it still works and warns. `figure` used to
+> mean *the figure alone* and now means *the figure with its source folded* — the default,
+> spelled out. A book that wants the old behaviour writes ` ```lini figure-only `.
 
 ## Theming
 

@@ -173,12 +173,12 @@ html.ayu .lini-error {
    figure directly would be a rule a host theme could outrank, and nothing
    styles a div named like this one.
 
-   The rule is written against the checkbox on purpose. `both` emits no
-   checkbox — so this selector cannot match, and the second view simply stays
-   on the page. That is the whole of the `both` mode: one arrangement, and the
-   absence of its control, rather than a second mechanism to keep in step. Such
-   a block says `lini-open` on its wrapper, for a theme that wants to tell the
-   two apart. */
+   The rule is written against the checkbox on purpose. A fence naming both
+   views — `figure-code`, `code-figure` — emits no checkbox, so this selector
+   cannot match and the second view simply stays on the page. That is the whole
+   of it: one arrangement, and the absence of its control, rather than a second
+   mechanism to keep in step. Such a block says `lini-open` on its wrapper, for
+   a theme that wants to tell the two apart. */
 .lini-view-toggle:not(:checked) ~ .lini-alt-view {
     display: none;
 }
