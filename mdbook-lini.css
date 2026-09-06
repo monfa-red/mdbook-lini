@@ -63,24 +63,27 @@ html.ayu .lini-error {
     color-scheme: dark;
 }
 
-/* On mobile, pull the figure into the page padding to reclaim width. */
+/* On a phone the figure reclaims the page padding, edge to edge, the way an
+   image does — at that width a margin costs more than it says. */
 @media only screen and (max-width: 768px) {
     .lini-figure {
         margin-left: calc(var(--page-padding) * -1);
         margin-right: calc(var(--page-padding) * -1);
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
     }
 }
 
 /* ── The source listing ─────────────────────────────────────────────────
    A figure and the source that drew it, with a checkbox between them. Pure
    CSS: it works with scripts off, takes keyboard focus, and needs no
-   runtime — the promise the figures themselves make. */
+   runtime — the promise the figures themselves make.
+
+   None of the three boxes below states a width. A block element already fills
+   its container, so the declaration only ever did one thing: pin the box to
+   that width when a theme's negative margins asked it to reach past the page
+   padding — which is how a full-bleed listing ended up short on one side. */
 
 .lini-figure-block {
     position: relative;
-    width: 100%;
     margin: 16px 0;
 }
 
@@ -237,12 +240,15 @@ html.ayu .lini-error {
 /* Fallbacks for a page read with scripts off. mdbook's script adds `.hljs`
    to the code element, which brings the theme's code background, colour and
    horizontal scrolling — and it is unlayered, so it wins the moment it
-   lands. */
+   lands.
+
+   The fill rides the `<code>`, never the `<pre>`: a theme dresses the code
+   element and leaves the `<pre>` transparent, so a fallback on the wrapper
+   would show at the corners of the rounded box drawn inside it. On the code
+   element the theme's own fill simply lands on top of ours. */
 .lini-source > pre {
     margin: 0;
-    width: 100%;
     overflow-x: auto;
-    background: light-dark(#f6f7f6, #1d1f21);
 }
 
 .lini-source > pre > code {
@@ -250,6 +256,7 @@ html.ayu .lini-error {
     padding: 1rem;
     white-space: pre;
     font-size: 0.875em;
+    background: light-dark(#f6f7f6, #1d1f21);
 }
 
 /* The panel is a bare wrapper on purpose — it takes no frame of its own, so
@@ -263,7 +270,6 @@ html.ayu .lini-error {
    Lini's sheet deliberately sets none, so its `light-dark()` pairs read
    whatever the host puts on the listing. */
 .lini-source {
-    width: 100%;
     margin: 16px 0;
 }
 
