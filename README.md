@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/monfa-red/mdbook-lini/main/assets/logo/lini_icon.svg" alt="Lini" width="128">
+  <a href="https://lini.rs"><img src="https://raw.githubusercontent.com/monfa-red/mdbook-lini/main/assets/logo/lini_icon.svg" alt="Lini" width="128"></a>
 </p>
 
 <p align="center"><strong>From mindmap to blueprint, in your mdbook.</strong></p>
