@@ -5,9 +5,13 @@
    binding that property to the book's theme is the whole light/dark
    integration — no script, no re-render on toggle. */
 
+/* The margin is the figure's whole spacing, so it matches the listing's — and
+   a figure toggled for its source swaps one box for another that sits in the
+   same place. No padding: the SVG already carries whatever air its own
+   geometry needs, and 6px here only pushed a figure off the rhythm every
+   other block on the page keeps. */
 .lini-figure {
     margin: 16px 0;
-    padding: 6px 0;
     overflow-x: auto;
 }
 
