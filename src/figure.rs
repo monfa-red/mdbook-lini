@@ -74,8 +74,8 @@ impl Mode {
     /// The source leading with nothing after it is the one arrangement that
     /// never puts a figure on the page, so `code-only` is also the fence that
     /// never compiles: a fragment, or a deliberate counter-example, stays a
-    /// listing to read instead of becoming an error box. That used to be a
-    /// word of its own (`raw`); it is a consequence of the grammar now.
+    /// listing to read instead of becoming an error box — a consequence of
+    /// the grammar rather than a word of its own.
     fn draws(self) -> bool {
         !(self.lead == View::Source && self.second == Second::None)
     }
@@ -197,15 +197,6 @@ fn mode(words: &[&str], chapter: &str, line: usize) -> Mode {
             "code-figure" => Mode { lead: Source, second: Shown },
             "figure-only" => Mode { lead: Figure, second: None },
             "code-only" => Mode { lead: Source, second: None },
-            // `raw` was `code-only` before the views had a grammar to name
-            // them in. It stays readable for one release rather than turning
-            // a book's fragments into error boxes on upgrade.
-            "raw" => {
-                eprintln!(
-                    "mdbook-lini: {chapter}:{line}: `raw` is now `code-only` — still works, rename when convenient"
-                );
-                Mode { lead: Source, second: None }
-            }
             other => {
                 eprintln!(
                     "mdbook-lini: {chapter}:{line}: unknown word `{other}` on a lini fence — ignoring"
@@ -612,16 +603,6 @@ mod tests {
         assert!(!html.contains("<svg"), "code-only drew a figure: {html}");
         assert!(!html.contains("lini-view-toggle"), "code-only carries a toggle: {html}");
         assert!(!html.contains("lini-figure"), "{html}");
-    }
-
-    /// `raw` was this arrangement before the views had a grammar to name them
-    /// in. Upgrading a book must not turn its fragments into error boxes.
-    #[test]
-    fn raw_still_reads_as_code_only() {
-        assert_eq!(
-            render("|box| { fill:", "demo.md", 1, None, &["raw"]),
-            render("|box| { fill:", "demo.md", 1, None, &["code-only"]),
-        );
     }
 
     /// The point of `code-only`: a fragment or a deliberate counter-example is

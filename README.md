@@ -141,9 +141,9 @@ Whitespace or a comma both separate, so ` ```lini,figure ` reads the same. The w
 alternatives, each naming a whole arrangement — write two and the last wins. A word we
 don't recognise is reported on stderr and ignored, never fatal.
 
-> **Renamed in 0.4.** `raw` is now `code-only`; it still works and warns. `figure` used to
-> mean *the figure alone* and now means *the figure with its source folded* — the default,
-> spelled out. A book that wants the old behaviour writes ` ```lini figure-only `.
+> **Changed in 0.4.** `figure` used to mean *the figure alone* and now means *the figure
+> with its source folded* — the default, spelled out; a book that wants the old behaviour
+> writes ` ```lini figure-only `. `raw` is `code-only`.
 
 ## Theming
 
