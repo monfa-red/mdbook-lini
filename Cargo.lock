@@ -124,9 +124,9 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "lini"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f8b2ad3349f1a34d992111f374e91c191d860bfe065202454d1f0915d71a278"
+checksum = "21f9b6ac9d04eab76d3da3276fb714ea751a1bfa8e44d9dc9cd660921ff2dcbb"
 dependencies = [
  "clap",
  "libm",
