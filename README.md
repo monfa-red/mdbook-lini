@@ -60,7 +60,7 @@ That's it — no `additional-css`, no files to copy.
 ## Writing a figure
 
 Any Lini source works. The [tour](https://lini.rs/docs/) walks every family and the
-[reference](https://lini.rs/docs/reference/00-quickstart.html) covers it in full; this is
+[reference](https://lini.rs/docs/reference/00-at-a-glance.html) covers it in full; this is
 the shape of it:
 
 ````markdown
