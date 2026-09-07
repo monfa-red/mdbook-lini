@@ -125,6 +125,8 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 [[package]]
 name = "lini"
 version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f8b2ad3349f1a34d992111f374e91c191d860bfe065202454d1f0915d71a278"
 dependencies = [
  "clap",
  "libm",
@@ -133,7 +135,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-lini"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "lini",
  "serde_json",
