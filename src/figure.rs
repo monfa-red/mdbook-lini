@@ -185,27 +185,35 @@ pub fn render(
 /// not fatal — the same bargain the rest of this module strikes: a typo in an
 /// info string costs a line of build output, never the figure.
 fn mode(words: &[&str], chapter: &str, line: usize) -> Mode {
+    let mut mode = Mode { lead: View::Figure, second: Second::Folded };
+    for word in words {
+        match arrangement(word) {
+            Some(named) => mode = named,
+            Option::None => eprintln!(
+                "mdbook-lini: {chapter}:{line}: unknown word `{word}` on a lini fence — ignoring"
+            ),
+        }
+    }
+    mode
+}
+
+/// The arrangement one fence word names, or `None` if it names nothing.
+///
+/// The vocabulary lives here alone, so a test can ask whether a word is one of
+/// ours without keeping a second copy of the list to drift against the first.
+fn arrangement(word: &str) -> Option<Mode> {
     use Second::{Folded, None, Shown};
     use View::{Figure, Source};
 
-    let mut mode = Mode { lead: Figure, second: Folded };
-    for word in words {
-        mode = match *word {
-            "figure" => Mode { lead: Figure, second: Folded },
-            "code" => Mode { lead: Source, second: Folded },
-            "figure-code" => Mode { lead: Figure, second: Shown },
-            "code-figure" => Mode { lead: Source, second: Shown },
-            "figure-only" => Mode { lead: Figure, second: None },
-            "code-only" => Mode { lead: Source, second: None },
-            other => {
-                eprintln!(
-                    "mdbook-lini: {chapter}:{line}: unknown word `{other}` on a lini fence — ignoring"
-                );
-                mode
-            }
-        };
-    }
-    mode
+    Some(match word {
+        "figure" => Mode { lead: Figure, second: Folded },
+        "code" => Mode { lead: Source, second: Folded },
+        "figure-code" => Mode { lead: Figure, second: Shown },
+        "code-figure" => Mode { lead: Source, second: Shown },
+        "figure-only" => Mode { lead: Figure, second: None },
+        "code-only" => Mode { lead: Source, second: None },
+        _ => return Option::None,
+    })
 }
 
 /// A figure and the collapsed listing of the source that drew it.
@@ -619,6 +627,29 @@ mod tests {
     fn a_code_only_listing_emits_no_blank_line() {
         let html = render(SPACED, "demo.md", 1, None, &["code-only"]);
         assert_eq!(blank_line(&html), None, "{html}");
+    }
+
+    /// The book under `tests/book/` is built by CI, not by `cargo test`, so a
+    /// fence word that stops being one goes unnoticed here — which is exactly
+    /// what happened when `raw` was retired and `figure` changed meaning: the
+    /// fixture kept both and the `book` job failed for three releases while
+    /// this suite stayed green. Reading the fixture from here closes that gap
+    /// without needing mdbook.
+    #[test]
+    fn the_book_fixture_only_uses_words_we_know() {
+        let md = include_str!("../tests/book/src/chapter_1.md");
+        let mut fences = 0;
+        for line in md.lines().filter(|l| l.trim_start().starts_with("```lini")) {
+            fences += 1;
+            let info = line.trim_start().trim_start_matches('`');
+            for word in info.split([' ', '\t', ',']).skip(1).filter(|w| !w.is_empty()) {
+                assert!(
+                    arrangement(word).is_some(),
+                    "tests/book/src/chapter_1.md says `{word}`, which is not a fence word"
+                );
+            }
+        }
+        assert!(fences >= 6, "the fixture lost its fences: found {fences}");
     }
 
     /// Lini dresses every node in `.lini-<type>`, so a class of ours that

@@ -23,9 +23,9 @@ reader -> cdn "GET /guide"
 cdn --> reader "HTML"
 ```
 
-One opted out with `figure`, which renders as it always did.
+One opted out with `figure-only`, which is the figure and nothing else.
 
-```lini figure
+```lini figure-only
 |box#a| "just"
 a -> b "a picture"
 ```
@@ -37,10 +37,10 @@ Source first, with the figure behind the toggle — how a reference chapter read
 draft -> review -> publish
 ```
 
-A fragment that does not compile on its own. `raw` never reaches the compiler, so
-it stays a listing rather than becoming an error box.
+A fragment that does not compile on its own. `code-only` never reaches the
+compiler, so it stays a listing rather than becoming an error box.
 
-```lini raw
+```lini code-only
 |box#hero| "…"   // a shape, not a whole file
 { fill: --teal-wash; }
 ```
