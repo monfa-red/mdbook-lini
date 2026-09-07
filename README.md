@@ -227,6 +227,10 @@ Everything about the language itself lives with Lini, not here:
 - [lini.rs](https://lini.rs) — language reference and gallery
 - [github.com/monfa-red/lini](https://github.com/monfa-red/lini) — the compiler, its `SPEC.md`,
   and `samples/` for every figure family
+- [astro-lini](https://github.com/monfa-red/astro-lini) — the same fences in an Astro site,
+  with the same fence words this preprocessor reads
+- [lini-wasm](https://www.npmjs.com/package/lini-wasm) — the compiler for JavaScript, if you
+  are building an integration of your own
 
 ## License
 
