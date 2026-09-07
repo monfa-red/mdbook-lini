@@ -3,4 +3,7 @@ target/
 
 # Local-only path override for developing against ../lini
 .cargo/
+
+# `mdbook build tests/book` by hand lands here; `tests/book.rs` builds to
+# `target/` instead, so the suite leaves the tree alone.
 tests/book/out/
