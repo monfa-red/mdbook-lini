@@ -86,9 +86,12 @@ fn render(items: &mut [Value], src_root: &Path, bundled_css: bool) {
                 figures += 1;
                 figure::render(source, &source_path, line, base_dir.as_deref(), words)
             });
-            // Only a chapter that drew something needs the stylesheet.
-            if bundled_css && figures > 0 {
-                rendered.insert_str(0, css::style_tag());
+            // Only a chapter that drew something needs a stylesheet — but a
+            // book that declined ours still gets the token palette, which is
+            // the compiler's and not a look to own. See `css`.
+            if figures > 0 {
+                rendered
+                    .insert_str(0, if bundled_css { css::style_tag() } else { css::palette_tag() });
             }
             chapter.insert("content".into(), Value::String(rendered));
         }

@@ -172,6 +172,12 @@ Its eleven-hue palette (`--rose`, `--sky`, `--teal`, … each in five tiers) is 
 where a figure references it.
 
 > [!NOTE]
+> `bundled-css = false` drops *our* stylesheet, not Lini's **token palette** — the sheet
+> the syntax highlighter's own markup is written against. Those class names belong to the
+> compiler and change with it, so the palette ships either way and `mdbook-lini.css` does
+> not carry it.
+
+> [!NOTE]
 > Alias `--lini-font-family` only to a proportional sans close in metrics to the one Lini
 > measured against at compile time. Lini bakes each label's position and sizes its box to
 > fit, so a wider face — a monospace one especially — pushes the text past its border.

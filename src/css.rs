@@ -8,6 +8,13 @@
 //! It goes in `@layer mdbook-lini`, so any unlayered rule in the book's own CSS
 //! wins without `!important`. Books that would rather own the styling outright
 //! set `bundled-css = false` and link `mdbook-lini.css` themselves.
+//!
+//! **The token palette ships either way.** It is not part of the look a book
+//! can own: it is the sheet the highlighter's own markup is written against,
+//! and it lives in the compiler so a colour it adds or renames arrives with
+//! the release. `mdbook-lini.css` cannot carry it without going stale, so a
+//! book that opted out and got only that file used to lose its highlighting
+//! silently — every listing monochrome, with nothing to point at.
 
 use std::sync::OnceLock;
 
@@ -42,6 +49,17 @@ pub fn style_tag() -> &'static str {
             minify(&lini::highlight_css())
         )
     })
+}
+
+/// The token palette alone, for a book that owns the rest of the styling.
+///
+/// `bundled-css = false` means "I will dress the figures myself", and a book
+/// can: `mdbook-lini.css` is checked in for exactly that. It does not mean "I
+/// will invent the highlighter's colours", which no book could — the class
+/// names are the compiler's and change with it.
+pub fn palette_tag() -> &'static str {
+    static TAG: OnceLock<String> = OnceLock::new();
+    TAG.get_or_init(|| format!("<style>{}</style>\n\n", minify(&lini::highlight_css())))
 }
 
 /// Strip comments and collapse whitespace. The stylesheet is repeated once per
@@ -85,6 +103,17 @@ fn collapse(css: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A book that owns the styling still cannot own the highlighter's
+    /// colours: the class names are the compiler's. Opting out used to take
+    /// the palette with the layout and leave every listing monochrome.
+    #[test]
+    fn the_palette_ships_without_our_stylesheet() {
+        let tag = palette_tag();
+        assert!(tag.contains("--lini-tok-"), "{tag}");
+        assert!(!tag.contains("lini-figure-block"), "the layout rode along: {tag}");
+        assert!(!tag.contains("@layer mdbook-lini"), "{tag}");
+    }
 
     #[test]
     fn the_tag_carries_the_stylesheet_in_its_own_layer() {
